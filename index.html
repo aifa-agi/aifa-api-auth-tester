@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI API Test Tool</title>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        /* Tab switcher styles */
+        .tab-container {
+            margin-bottom: 30px;
+        }
+
+        .tab-buttons {
+            display: flex;
+            background-color: #f8f9fa;
+            border-radius: 6px;
+            padding: 4px;
+            margin-bottom: 20px;
+        }
+
+        .tab-button {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            color: #666;
+        }
+
+        .tab-button.active {
+            background-color: #007bff;
+            color: white;
+            box-shadow: 0 2px 4px rgba(0, 123, 255, 0.3);
+        }
+
+        .tab-button:hover:not(.active) {
+            background-color: #e9ecef;
+            color: #333;
+        }
+
+        /* Tab content styles */
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Form styles */
+        .form-row {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group.flex-1 {
+            flex: 1;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        input,
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+            box-sizing: border-box;
+        }
+
+        input:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.1);
+        }
+
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+            font-family: inherit;
+        }
+
+        .test-btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: background-color 0.3s ease;
+            margin-top: 10px;
+            margin-right: 10px;
+        }
+
+        .test-btn:hover:not(:disabled) {
+            background-color: #0056b3;
+        }
+
+        .test-btn:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        .stop-btn {
+            background-color: #dc3545;
+            margin-right: 10px;
+        }
+
+        .stop-btn:hover:not(:disabled) {
+            background-color: #c82333;
+        }
+
+        .clear-btn {
+            background-color: #6c757d;
+        }
+
+        .clear-btn:hover:not(:disabled) {
+            background-color: #5a6268;
+        }
+
+        .results {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 20px;
+            margin-top: 20px;
+            white-space: pre-wrap;
+            overflow-x: auto;
+            font-family: "Courier New", monospace;
+            font-size: 13px;
+            line-height: 1.4;
+            min-height: 100px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .results.error {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+
+        .results.success {
+            background-color: #d1edff;
+            border-color: #bee5eb;
+            color: #0c5460;
+        }
+
+        .results.streaming {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+
+        .info-text {
+            color: #666;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+
+        .endpoint-info {
+            background-color: #e9ecef;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            font-family: "Courier New", monospace;
+            font-size: 13px;
+            color: #495057;
+        }
+
+        .stream-stats {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 4px;
+            padding: 10px;
+            margin-bottom: 20px;
+            font-size: 12px;
+            color: #856404;
+        }
+
+        .message-preview {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 15px;
+            margin-top: 10px;
+            min-height: 50px;
+            font-family: inherit;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .message-preview.typing {
+            background-color: #e8f5e8;
+            border-color: #c3e6cb;
+        }
+
+        .typing-indicator {
+            opacity: 0.7;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 0.7; }
+            51%, 100% { opacity: 0.3; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🤖 AI API Test Tool</h1>
+
+        <!-- Tab Switcher -->
+        <div class="tab-container">
+            <div class="tab-buttons">
+                <button class="tab-button active" onclick="switchTab('rest')">
+                    📡 REST API Test
+                </button>
+                <button class="tab-button" onclick="switchTab('stream')">
+                    🌊 Stream API Test
+                </button>
+            </div>
+        </div>
+
+        <!-- REST API Tab -->
+        <div id="rest-tab" class="tab-content active">
+            <div class="endpoint-info">
+                <strong>Endpoint:</strong>
+                https://aifa.dev/integrations/api/external-ai-assiatant/external-frontend/chat
+            </div>
+
+            <div class="form-row">
+                <div class="input-group flex-1">
+                    <label for="restToken">🔐 Authorization Token:</label>
+                    <input
+                        type="text"
+                        id="restToken"
+                        placeholder="Введите Bearer токен..."
+                        value="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjciLCJ0eXBlIjoiYXBpVXNlciIsIm5hbWUiOiJSb21hMi84LzEwLzI1IiwiaWF0IjoxNzU0ODMzNDcyLCJleHAiOjE3NTQ4NDc4NzJ9.-2VHW5yZ-u1BX1UAj4X9qYeeesF9qFo_s-hLZ90mLbw"
+                    />
+                    <div class="info-text">JWT токен для авторизации запроса</div>
+                </div>
+                <div class="input-group flex-1">
+                    <label for="restChatId">💬 Chat ID:</label>
+                    <input
+                        type="text"
+                        id="restChatId"
+                        placeholder="Введите ID чата..."
+                        value="hi95ez4cr1i2k2msne14olol"
+                    />
+                    <div class="info-text">Уникальный идентификатор чата</div>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label for="restMessageInput">✉️ Сообщение для отправки:</label>
+                <textarea
+                    id="restMessageInput"
+                    placeholder="Введите ваше сообщение здесь..."
+                >Привет! Это тестовое сообщение из REST API тестера.</textarea>
+                <div class="info-text">
+                    Текст сообщения, которое будет отправлено AI
+                </div>
+            </div>
+
+            <button id="restTestBtn" class="test-btn" onclick="testRestAPI()">
+                🚀 Тестировать REST API
+            </button>
+
+            <pre id="restResults" class="results">Результаты тестирования появятся здесь...</pre>
+        </div>
+
+        <!-- Stream API Tab -->
+        <div id="stream-tab" class="tab-content">
+            <div class="endpoint-info">
+                <strong>Endpoint:</strong>
+                https://aifa.dev/integrations/api/external-ai-assiatant/external-frontend/stream-chat
+            </div>
+
+            <div class="form-row">
+                <div class="input-group flex-1">
+                    <label for="streamToken">🔐 Authorization Token:</label>
+                    <input
+                        type="text"
+                        id="streamToken"
+                        placeholder="Введите Bearer токен..."
+                        value="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjciLCJ0eXBlIjoiYXBpVXNlciIsIm5hbWUiOiJSb21hMi84LzEwLzI1IiwiaWF0IjoxNzU0ODMzNDcyLCJleHAiOjE3NTQ4NDc4NzJ9.-2VHW5yZ-u1BX1UAj4X9qYeeesF9qFo_s-hLZ90mLbw"
+                    />
+                    <div class="info-text">JWT токен для авторизации запроса</div>
+                </div>
+                <div class="input-group flex-1">
+                    <label for="streamChatId">💬 Chat ID:</label>
+                    <input
+                        type="text"
+                        id="streamChatId"
+                        placeholder="Введите ID чата..."
+                        value="stream-test-chat-" + Date.now()
+                    />
+                    <div class="info-text">Уникальный идентификатор чата</div>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label for="streamMessageInput">✉️ Сообщение для отправки:</label>
+                <textarea
+                    id="streamMessageInput"
+                    placeholder="Введите ваше сообщение здесь..."
+                >Расскажи мне интересную историю про космос</textarea>
+                <div class="info-text">
+                    Текст сообщения, которое будет отправлено AI (streaming режим)
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>🎬 Предпросмотр AI ответа в реальном времени:</label>
+                <div id="messagePreview" class="message-preview">
+                    Здесь будет отображаться ответ AI по мере его генерации...
+                </div>
+            </div>
+
+            <button id="streamTestBtn" class="test-btn" onclick="testStreamAPI()">
+                🌊 Начать Stream Тест
+            </button>
+            <button id="streamStopBtn" class="test-btn stop-btn" onclick="stopStream()" disabled>
+                ⏹️ Остановить Stream
+            </button>
+            <button id="streamClearBtn" class="test-btn clear-btn" onclick="clearStreamResults()">
+                🗑️ Очистить
+            </button>
+
+            <div id="streamStats" class="stream-stats" style="display: none;">
+                <strong>📊 Статистика Streaming:</strong>
+                <span id="statsContent">Ожидание начала теста...</span>
+            </div>
+
+            <pre id="streamResults" class="results">Лог streaming сессии появится здесь...</pre>
+        </div>
+    </div>
+
+    <script>
+        let currentStream = null;
+        let streamStartTime = null;
+        let chunksReceived = 0;
+        let totalCharacters = 0;
+
+        // Tab switching functionality
+        function switchTab(tabName) {
+            // Stop any active stream when switching tabs
+            if (tabName === 'rest' && currentStream) {
+                stopStream();
+            }
+
+            // Remove active class from all tab buttons and contents
+            document
+                .querySelectorAll(".tab-button")
+                .forEach((btn) => btn.classList.remove("active"));
+            document
+                .querySelectorAll(".tab-content")
+                .forEach((content) => content.classList.remove("active"));
+
+            // Add active class to selected tab
+            event.target.classList.add("active");
+            document.getElementById(tabName + "-tab").classList.add("active");
+
+            console.log(`Switched to ${tabName} tab`);
+        }
+
+        // REST API testing functionality
+        async function testRestAPI() {
+            const resultsEl = document.getElementById("restResults");
+            const messageInput = document.getElementById("restMessageInput");
+            const chatIdInput = document.getElementById("restChatId");
+            const tokenInput = document.getElementById("restToken");
+            const testBtn = document.getElementById("restTestBtn");
+
+            // Get input values
+            const messageText = messageInput.value.trim();
+            const chatId = chatIdInput.value.trim();
+            const token = tokenInput.value.trim();
+
+            // Validation
+            if (!messageText) {
+                resultsEl.textContent =
+                    "❌ Ошибка: Пожалуйста, введите сообщение для отправки.";
+                resultsEl.className = "results error";
+                messageInput.focus();
+                return;
+            }
+
+            if (!chatId) {
+                resultsEl.textContent = "❌ Ошибка: Пожалуйста, введите ID чата.";
+                resultsEl.className = "results error";
+                chatIdInput.focus();
+                return;
+            }
+
+            if (!token) {
+                resultsEl.textContent =
+                    "❌ Ошибка: Пожалуйста, введите токен авторизации.";
+                resultsEl.className = "results error";
+                tokenInput.focus();
+                return;
+            }
+
+            // Disable button and show loading state
+            testBtn.disabled = true;
+            testBtn.textContent = "⏳ Тестирование...";
+            resultsEl.textContent =
+                "🔄 Выполняется тестирование API...\n\nЭтапы:\n1. Preflight OPTIONS запрос\n2. Основной POST запрос\n3. Обработка ответа";
+            resultsEl.className = "results";
+
+            const apiUrl =
+                "https://aifa.dev/integrations/api/external-ai-assiatant/external-frontend/chat";
+
+            try {
+                const startTime = performance.now();
+
+                // Test OPTIONS preflight
+                console.log("Testing OPTIONS preflight...");
+                const optionsRes = await fetch(apiUrl, {
+                    method: "OPTIONS",
+                    headers: {
+                        Origin: window.location.origin,
+                        "Access-Control-Request-Method": "POST",
+                        "Access-Control-Request-Headers": "Content-Type, Authorization",
+                    },
+                });
+
+                console.log("OPTIONS Status:", optionsRes.status);
+
+                // Test POST request
+                console.log("Testing POST request...");
+                const postRes = await fetch(apiUrl, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`,
+                    },
+                    body: JSON.stringify({
+                        chat_id: chatId,
+                        text: messageText,
+                    }),
+                });
+
+                const endTime = performance.now();
+                const responseTime = Math.round(endTime - startTime);
+
+                const data = await postRes.json();
+
+                // Format successful response
+                const successResponse = `🎉 ТЕСТИРОВАНИЕ ЗАВЕРШЕНО УСПЕШНО
+                
+⏱️  Время выполнения: ${responseTime}ms
+🔗 Endpoint: ${apiUrl}
+📝 Отправленное сообщение: "${messageText}"
+🆔 Chat ID: ${chatId}
+🔑 Токен: ${token.substring(0, 20)}...
+
+📊 РЕЗУЛЬТАТЫ ЗАПРОСОВ:
+┌─────────────────────────────────────┐
+│ OPTIONS Preflight: ${optionsRes.status} ${optionsRes.statusText}     │
+│ POST Request: ${postRes.status} ${postRes.statusText}          │
+└─────────────────────────────────────┘
+
+🌐 CORS ЗАГОЛОВКИ:
+• Allow-Origin: ${
+                    postRes.headers.get("Access-Control-Allow-Origin") ||
+                    "не установлен"
+                }
+• Allow-Methods: ${
+                    postRes.headers.get("Access-Control-Allow-Methods") ||
+                    "не установлен"
+                }
+• Allow-Headers: ${
+                    postRes.headers.get("Access-Control-Allow-Headers") ||
+                    "не установлен"
+                }
+
+📦 ОТВЕТ ОТ СЕРВЕРА:
+${JSON.stringify(data, null, 2)}`;
+
+                resultsEl.textContent = successResponse;
+                resultsEl.className = "results success";
+            } catch (error) {
+                console.error("Test error:", error);
+
+                const errorResponse = `❌ ОШИБКА ТЕСТИРОВАНИЯ
+
+🔥 Тип ошибки: ${error.name}
+📝 Сообщение: ${error.message}
+
+🔍 ВОЗМОЖНЫЕ ПРИЧИНЫ:
+• Неверный токен авторизации
+• Проблемы с CORS политикой
+• Сервер недоступен
+• Неправильный формат данных
+• Сетевая ошибка
+
+🛠️  РЕКОМЕНДАЦИИ:
+• Проверьте правильность токена
+• Убедитесь, что сервер запущен
+• Проверьте интернет соединение
+• Попробуйте другой Chat ID`;
+
+                resultsEl.textContent = errorResponse;
+                resultsEl.className = "results error";
+            } finally {
+                // Re-enable button
+                testBtn.disabled = false;
+                testBtn.textContent = "🚀 Тестировать REST API";
+            }
+        }
+
+        // Stream API testing functionality
+        async function testStreamAPI() {
+            const resultsEl = document.getElementById("streamResults");
+            const messagePreview = document.getElementById("messagePreview");
+            const messageInput = document.getElementById("streamMessageInput");
+            const chatIdInput = document.getElementById("streamChatId");
+            const tokenInput = document.getElementById("streamToken");
+            const testBtn = document.getElementById("streamTestBtn");
+            const stopBtn = document.getElementById("streamStopBtn");
+            const statsEl = document.getElementById("streamStats");
+            const statsContent = document.getElementById("statsContent");
+
+            // Get input values
+            const messageText = messageInput.value.trim();
+            const chatId = chatIdInput.value.trim();
+            const token = tokenInput.value.trim();
+
+            // Validation
+            if (!messageText) {
+                resultsEl.textContent = "❌ Ошибка: Пожалуйста, введите сообщение для отправки.";
+                resultsEl.className = "results error";
+                messageInput.focus();
+                return;
+            }
+
+            if (!chatId) {
+                resultsEl.textContent = "❌ Ошибка: Пожалуйста, введите ID чата.";
+                resultsEl.className = "results error";
+                chatIdInput.focus();
+                return;
+            }
+
+            if (!token) {
+                resultsEl.textContent = "❌ Ошибка: Пожалуйста, введите токен авторизации.";
+                resultsEl.className = "results error";
+                tokenInput.focus();
+                return;
+            }
+
+            // Initialize streaming state
+            testBtn.disabled = true;
+            stopBtn.disabled = false;
+            testBtn.textContent = "🌊 Streaming...";
+            
+            streamStartTime = performance.now();
+            chunksReceived = 0;
+            totalCharacters = 0;
+            
+            statsEl.style.display = 'block';
+            messagePreview.className = 'message-preview typing';
+            messagePreview.innerHTML = 'Ожидание ответа от AI<span class="typing-indicator">...</span>';
+            
+            resultsEl.textContent = "🌊 НАЧАЛО STREAM ТЕСТИРОВАНИЯ\n\n";
+            resultsEl.className = "results streaming";
+
+            const streamUrl = "https://aifa.dev/integrations/api/external-ai-assiatant/external-frontend/stream-chat";
+            
+            try {
+                // Make POST request to stream endpoint
+                const response = await fetch(streamUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        chat_id: chatId,
+                        text: messageText
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                // Log initial request info
+                resultsEl.textContent += `📤 ЗАПРОС ОТПРАВЛЕН:
+🔗 URL: ${streamUrl}
+📝 Сообщение: "${messageText}"
+🆔 Chat ID: ${chatId}
+📊 Статус ответа: ${response.status} ${response.statusText}
+🕐 Время начала: ${new Date().toLocaleTimeString()}
+
+🌊 ПОЛУЧЕНИЕ STREAM ДАННЫХ:\n\n`;
+
+                // Create stream reader
+                const reader = response.body?.getReader();
+                if (!reader) {
+                    throw new Error("Не удалось получить stream reader");
+                }
+
+                const decoder = new TextDecoder();
+                currentStream = reader;
+                let accumulatedText = '';
+
+                try {
+                    while (true) {
+                        const { done, value } = await reader.read();
+                        
+                        if (done) {
+                            const endTime = performance.now();
+                            const totalTime = Math.round(endTime - streamStartTime);
+                            
+                            resultsEl.textContent += `\n🏁 STREAM ЗАВЕРШЕН:
+⏱️  Общее время: ${totalTime}ms
+📦 Получено chunks: ${chunksReceived}
+📝 Всего символов: ${totalCharacters}
+📈 Скорость: ${Math.round(totalCharacters / (totalTime / 1000))} символов/сек\n`;
+                            
+                            messagePreview.className = 'message-preview';
+                            break;
+                        }
+
+                        const chunk = decoder.decode(value, { stream: true });
+                        chunksReceived++;
+                        
+                        // Process each line in the chunk
+                        const lines = chunk.split('\n');
+                        
+                        for (const line of lines) {
+                            if (!line.trim()) continue;
+                            
+                            // Log raw chunk data
+                            resultsEl.textContent += `📦 Chunk ${chunksReceived}: ${line.substring(0, 100)}${line.length > 100 ? '...' : ''}\n`;
+                            
+                            // Try to parse as SSE data
+                            if (line.startsWith('data: ')) {
+                                try {
+                                    const jsonData = JSON.parse(line.substring(6));
+                                    
+                                    if (jsonData.type === 'append-message' || jsonData.type === 'update-message') {
+                                        const messageData = jsonData.message;
+                                        
+                                        if (messageData.parts && messageData.parts[0] && messageData.parts[0].text) {
+                                            accumulatedText = messageData.parts[0].text;
+                                            totalCharacters = accumulatedText.length;
+                                            
+                                            // Update preview
+                                            messagePreview.innerHTML = accumulatedText + '<span class="typing-indicator">▋</span>';
+                                            
+                                            // Log structured message
+                                            resultsEl.textContent += `✅ Parsed message (${jsonData.type}):
+   📝 Text: "${accumulatedText.substring(0, 50)}${accumulatedText.length > 50 ? '...' : ''}"
+   🆔 ID: ${messageData.id}
+   📅 Created: ${messageData.createdAt}
+   📊 Length: ${accumulatedText.length} chars\n\n`;
+                                        }
+                                    } else if (jsonData.type === 'error') {
+                                        resultsEl.textContent += `❌ Stream Error: ${jsonData.error}\n`;
+                                        if (jsonData.details) {
+                                            resultsEl.textContent += `   Details: ${jsonData.details}\n`;
+                                        }
+                                    }
+                                } catch (parseError) {
+                                    resultsEl.textContent += `⚠️  Parse error: ${parseError.message}\n`;
+                                }
+                            }
+                        }
+                        
+                        // Update stats
+                        const elapsed = Math.round(performance.now() - streamStartTime);
+                        statsContent.textContent = `Время: ${elapsed}ms | Chunks: ${chunksReceived} | Символы: ${totalCharacters} | Скорость: ${Math.round(totalCharacters / (elapsed / 1000))} симв/сек`;
+                        
+                        // Auto-scroll results
+                        resultsEl.scrollTop = resultsEl.scrollHeight;
+                    }
+                    
+                } finally {
+                    reader.releaseLock();
+                    currentStream = null;
+                }
+
+            } catch (error) {
+                console.error("Stream test error:", error);
+                
+                const errorResponse = `❌ ОШИБКА STREAM ТЕСТИРОВАНИЯ
+
+🔥 Тип ошибки: ${error.name}
+📝 Сообщение: ${error.message}
+
+🔍 ВОЗМОЖНЫЕ ПРИЧИНЫ:
+• Неверный токен авторизации  
+• Stream endpoint недоступен
+• Проблемы с CORS для streaming
+• Сетевая ошибка или таймаут
+• Неподдерживаемый формат данных
+
+🛠️  РЕКОМЕНДАЦИИ:
+• Проверьте токен и Chat ID
+• Убедитесь что stream endpoint работает
+• Проверьте браузерную консоль на ошибки
+• Попробуйте другое сообщение`;
+
+                resultsEl.textContent += `\n${errorResponse}`;
+                resultsEl.className = "results error";
+                
+                messagePreview.className = 'message-preview';
+                messagePreview.textContent = 'Ошибка получения ответа от AI';
+
+            } finally {
+                // Reset UI state
+                testBtn.disabled = false;
+                stopBtn.disabled = true;
+                testBtn.textContent = "🌊 Начать Stream Тест";
+                currentStream = null;
+            }
+        }
+
+        // Stop streaming
+        function stopStream() {
+            if (currentStream) {
+                currentStream.cancel();
+                currentStream = null;
+                
+                const resultsEl = document.getElementById("streamResults");
+                const testBtn = document.getElementById("streamTestBtn");
+                const stopBtn = document.getElementById("streamStopBtn");
+                const messagePreview = document.getElementById("messagePreview");
+                
+                resultsEl.textContent += "\n⏹️  STREAM ОСТАНОВЛЕН ПОЛЬЗОВАТЕЛЕМ\n";
+                
+                testBtn.disabled = false;
+                stopBtn.disabled = true;
+                testBtn.textContent = "🌊 Начать Stream Тест";
+                
+                messagePreview.className = 'message-preview';
+                console.log("Stream stopped by user");
+            }
+        }
+
+        // Clear stream results
+        function clearStreamResults() {
+            const resultsEl = document.getElementById("streamResults");
+            const messagePreview = document.getElementById("messagePreview");
+            const statsEl = document.getElementById("streamStats");
+            
+            resultsEl.textContent = "Лог streaming сессии появится здесь...";
+            resultsEl.className = "results";
+            
+            messagePreview.className = 'message-preview';
+            messagePreview.textContent = "Здесь будет отображаться ответ AI по мере его генерации...";
+            
+            statsEl.style.display = 'none';
+            
+            // Reset counters
+            chunksReceived = 0;
+            totalCharacters = 0;
+            streamStartTime = null;
+        }
+
+        // Keyboard shortcuts
+        document.getElementById("restMessageInput").addEventListener("keydown", function(e) {
+            if (e.ctrlKey && e.key === "Enter") {
+                testRestAPI();
+            }
+        });
+
+        document.getElementById("streamMessageInput").addEventListener("keydown", function(e) {
+            if (e.ctrlKey && e.key === "Enter") {
+                testStreamAPI();
+            }
+        });
+
+        // Auto-save form data to localStorage
+        function saveFormData() {
+            const formData = {
+                restToken: document.getElementById("restToken").value,
+                restChatId: document.getElementById("restChatId").value,
+                restMessage: document.getElementById("restMessageInput").value,
+                streamToken: document.getElementById("streamToken").value,
+                streamChatId: document.getElementById("streamChatId").value,
+                streamMessage: document.getElementById("streamMessageInput").value,
+            };
+            localStorage.setItem("aiApiTestData", JSON.stringify(formData));
+        }
+
+        function loadFormData() {
+            const saved = localStorage.getItem("aiApiTestData");
+            if (saved) {
+                try {
+                    const data = JSON.parse(saved);
+                    if (data.restToken) document.getElementById("restToken").value = data.restToken;
+                    if (data.restChatId) document.getElementById("restChatId").value = data.restChatId;
+                    if (data.restMessage) document.getElementById("restMessageInput").value = data.restMessage;
+                    if (data.streamToken) document.getElementById("streamToken").value = data.streamToken;
+                    if (data.streamChatId) document.getElementById("streamChatId").value = data.streamChatId;
+                    if (data.streamMessage) document.getElementById("streamMessageInput").value = data.streamMessage;
+                } catch (e) {
+                    console.log("Failed to load saved form data");
+                }
+            }
+        }
+
+        // Auto-save on input changes
+        document.addEventListener("DOMContentLoaded", function() {
+            loadFormData();
+
+            // Set unique chat ID for stream testing
+            document.getElementById("streamChatId").value = "stream-test-" + Date.now();
+
+            ["restToken", "restChatId", "restMessageInput", "streamToken", "streamChatId", "streamMessageInput"].forEach((id) => {
+                document.getElementById(id).addEventListener("input", saveFormData);
+            });
+
+            console.log("🚀 AI API Test Tool initialized with Stream support");
+        });
+
+        // Handle page unload - clean up streams
+        window.addEventListener('beforeunload', function() {
+            if (currentStream) {
+                currentStream.cancel();
+            }
+        });
+    </script>
+</body>
+</html>
